@@ -1,7 +1,7 @@
 package com.ruoyi.quartz.task.template;
 
 import com.ruoyi.common.core.redis.RedisCache;
-import com.ruoyi.quartz.task.MemberEmailTask;
+import com.ruoyi.quartz.domain.MemberEmailTask;
 import com.ruoyi.system.domain.EmailRecord;
 import com.ruoyi.system.service.IEmailRecordService;
 import com.ruoyi.system.service.IMemberService;
@@ -25,6 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * <p>
@@ -37,13 +38,17 @@ import java.util.List;
 @Component("abstractEmailTask")
 public class AbstractEmailTask implements SchedulingConfigurer {
     private static final int BATCH_SIZE = 3;
-    private static boolean isRunning = true; // 标志任务是否在运行
+    private static boolean isRunning = false; // 标志任务是否在运行
+    private static final ReentrantLock lock = new ReentrantLock();
 
     @Resource
     protected JavaMailSender javaMailSender;
 
     @Value("${spring.mail.username}")
     protected String fromEmail;
+
+    @Value("${naruto.clubName}")
+    protected String clubName;
 
     @Autowired
     protected IMemberService memberService;
@@ -64,55 +69,63 @@ public class AbstractEmailTask implements SchedulingConfigurer {
         isRunning = false;
     }
 
-
     protected void pushTasksToRedis(List<MemberEmailTask> tasks) {
         for (MemberEmailTask task : tasks) {
             redisCache.lRightPush("emailQueue", task);
         }
+        startScheduledTask(); // 确保有新任务时重新启动调度任务
     }
 
     @Scheduled(fixedRate = 60000) // 每分钟执行一次
     public void sendEmailsFromQueue() {
-        if (!isRunning) {
-            return; // 如果任务已停止，则不执行
+        if (!isRunning || !lock.tryLock()) {
+            return; // 如果任务已停止或锁未获得，则不执行
         }
 
-        List<MemberEmailTask> tasks = new ArrayList<>();
-        for (int i = 0; i < BATCH_SIZE; i++) {
-            MemberEmailTask task = redisCache.lLeftPop("emailQueue");
-            if (task != null) {
-                tasks.add(task);
-            } else {
-                break;
+        try {
+            List<MemberEmailTask> tasks = new ArrayList<>();
+            for (int i = 0; i < BATCH_SIZE; i++) {
+                MemberEmailTask task = redisCache.lLeftPop("emailQueue");
+                if (task != null) {
+                    tasks.add(task);
+                } else {
+                    break;
+                }
             }
-        }
 
-        if (tasks.isEmpty()) {
-            stopScheduledTask(); // 队列为空时停止任务
-            return;
-        }
-
-        for (MemberEmailTask task : tasks) {
-            EmailRecord emailRecord = new EmailRecord();
-            try {
-                emailRecord.setFromMember(fromEmail);
-                emailRecord.setToMember(task.getTo());
-                emailRecord.setSubject(task.getSubject());
-                emailRecord.setSendTime(new Date());
-                sendHtmlEmail(task.getTo(), task.getEmailSubject(), task.getHtmlContent());
-                emailRecord.setState(0);
-            } catch (Exception e) {
-                // 处理邮件发送异常
-                e.printStackTrace();
-                emailRecord.setState(1);
-                emailRecord.setReason(e.getMessage().substring(0, 200));
-            } finally {
-                emailRecordService.insertEmailRecord(emailRecord);
+            if (tasks.isEmpty()) {
+                stopScheduledTask(); // 队列为空时停止任务
+                return;
             }
+
+            for (MemberEmailTask task : tasks) {
+                EmailRecord emailRecord = new EmailRecord();
+                try {
+                    emailRecord.setFromMember(fromEmail);
+                    emailRecord.setToMember(task.getTo());
+                    emailRecord.setSubject(task.getSubject());
+                    emailRecord.setSendTime(new Date());
+                    sendHtmlEmail(task.getTo(), task.getEmailSubject(), task.getHtmlContent());
+                    emailRecord.setState(0);
+                } catch (Exception e) {
+                    // 处理邮件发送异常
+                    e.printStackTrace();
+                    emailRecord.setState(1);
+                    emailRecord.setReason(e.getMessage().substring(0, 200));
+                } finally {
+                    emailRecordService.insertEmailRecord(emailRecord);
+                }
+            }
+
+            if (!redisCache.hasKey("emailQueue")) {
+                stopScheduledTask(); // 如果队列中已没有任务，则停止任务
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
-    private void sendHtmlEmail(String to, String subject, String htmlContent) throws MessagingException, MessagingException {
+    private void sendHtmlEmail(String to, String subject, String htmlContent) throws MessagingException {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         helper.setFrom(fromEmail);
@@ -142,30 +155,21 @@ public class AbstractEmailTask implements SchedulingConfigurer {
                 "<p>亲爱的组员-" + nickName + "，</p>" +
                 "<p style=\"text-indent: 2em;\">提醒您今天<strong>" + activityTime + "</strong>有" + activityName + "活动，请记得准时参加。</p>" +
                 "<p><em>祝好，</em></p>" +
-                "<p><em>一花一世界组织</em></p>" +
+                "<p><em>" + clubName + "组织</em></p>" +
                 "</body>" +
                 "</html>";
     }
 
-    protected String generateOnlineEmailContent(String nickName, String activityName, String time) {
+    protected String generateOnlineEmailContent(String nickName, String activityName, String activityTime) {
         return "<html>" +
                 "<body>" +
                 "<p>亲爱的成员-" + nickName + "，</p>" +
-                "<p style=\"text-indent: 2em;\">距离" + activityName + "活动还有<strong>" + time + "</strong>，请勿缺席! 准时参加!</p>" +
+                "<p style=\"text-indent: 2em;\">距离" + activityName + "活动还有<strong>" + activityTime + "</strong>，请勿缺席! 准时参加!</p>" +
                 "<p><em>祝好，</em></p>" +
-                "<p><em>一花一世界组织</em></p>" +
+                "<p><em>" + clubName + "组织</em></p>" +
                 "</body>" +
                 "</html>";
     }
-
-//    public static void main(String[] args) {
-//        String activityTime = "09:50"; // 示例活动时间
-//        long minutesUntilEvent = calculateMinutesUntilEvent(activityTime);
-//        System.out.println("距离活动时间的分钟差: " + minutesUntilEvent);
-//        String formattedTimeDifference = formatTimeDifference(minutesUntilEvent);
-//        System.out.println("距离活动时间: " + formattedTimeDifference);
-//
-//    }
 
     public long calculateMinutesUntilEvent(String activityTime) {
         try {
@@ -207,3 +211,5 @@ public class AbstractEmailTask implements SchedulingConfigurer {
         }
     }
 }
+
+

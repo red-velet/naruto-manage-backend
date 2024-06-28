@@ -1,8 +1,8 @@
-package com.ruoyi.quartz.task;
+package com.ruoyi.quartz.domain;
 
 /**
  * <p>
- *
+ * 入队任务记录
  * </p>
  *
  * @author red-velvet

@@ -1,6 +1,5 @@
 package com.ruoyi.quartz.task;
 
-
 import com.ruoyi.common.constant.Constants;
 import com.ruoyi.common.enums.MemberState;
 import com.ruoyi.common.enums.MemberType;
@@ -15,64 +14,54 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * <p>
- * 通用活动通知：巅峰对决/组织争霸....
- * </p>
- *
- * @author red-velvet
- * @since 2024/6/21
- */
-@Component("commonTask")
-public class CommonTask extends AbstractEmailTask implements ActivityNotify {
+@Component("bastionTask")
+public class BastionTask extends AbstractEmailTask implements ActivityNotify {
+
 
     @Autowired
     private IMemberService memberService;
 
+
     @Override
     public void notifyTodayEvent(String subject, String time) {
-        // 提取所有成员的 qq 字段
+        //获取可以参加要塞资格的组员
         Member member = new Member();
         member.setState(MemberState.IN_ORGANIZATION.getCode());
+        member.setType(MemberType.MEMBER.getCode());
         List<Member> memberList = memberService.selectMemberList(member);
-
-        //获取邮件标题
+        //生成邮件标题
         String emailSubject = Constants.ACTIVITY_TODAY + subject + Constants.COME_ON;
 
-        //批量存进redis队列，等待消费
+        //入队等待消费
+        List<MemberEmailTask> tasks = new ArrayList<>();
+        for (Member m : memberList) {
+            String text = generateNotifyEmailContent(m.getNickname(), subject, time);
+            tasks.add(new MemberEmailTask(m.getQq() + "@qq.com", emailSubject, subject, text));
+        }
+        pushTasksToRedis(tasks);
+        // 手动启动任务
+        startScheduledTask();
+    }
+
+    @Override
+    public void notifyEventActivation(String subject, String time) {
+        //获取可以参加要塞资格的组员
+        Member member = new Member();
+        member.setState(MemberState.IN_ORGANIZATION.getCode());
+        member.setType(MemberType.MEMBER.getCode());
+        List<Member> memberList = memberService.selectMemberList(member);
+
+        //生成邮件标题
+        String emailSubject = Constants.ACTIVITY_UP_LINE + subject + Constants.COME_ON;
+
+        //入队等待消费
         List<MemberEmailTask> tasks = new ArrayList<>();
         for (Member m : memberList) {
             String text = generateNotifyEmailContent(m.getNickname(), subject, time);
             tasks.add(new MemberEmailTask(m.getQq() + Constants.QQ_TAIL, emailSubject, subject, text));
         }
         pushTasksToRedis(tasks);
-        //手动启动任务
-        startScheduledTask();
-    }
-
-    @Override
-    public void notifyEventActivation(String subject, String time) {
-        // 提取所有成员的 qq 字段
-        Member member = new Member();
-        member.setState(MemberState.IN_ORGANIZATION.getCode());
-        member.setType(MemberType.MEMBER.getCode());
-        List<Member> memberList = memberService.selectMemberList(member);
-
-        // 计算当前时间距离活动时间的分钟差
-        String diffTime = formatTimeDifference(calculateMinutesUntilEvent(time));
-
-        //获取邮件标题
-        String emailsSubject = Constants.ACTIVITY_UP_LINE + subject + Constants.COME_ON;
-
-        //批量存进redis队列，等待消费
-        List<MemberEmailTask> tasks = new ArrayList<>();
-        for (Member m : memberList) {
-            String text = generateOnlineEmailContent(m.getNickname(), subject, diffTime);
-            tasks.add(new MemberEmailTask(m.getQq() + Constants.QQ_TAIL, emailsSubject, subject, text));
-        }
-        pushTasksToRedis(tasks);
         // 手动启动任务
         startScheduledTask();
     }
 }
-

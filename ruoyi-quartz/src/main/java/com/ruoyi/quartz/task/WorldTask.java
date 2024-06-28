@@ -1,6 +1,5 @@
 package com.ruoyi.quartz.task;
 
-
 import com.ruoyi.common.constant.Constants;
 import com.ruoyi.common.enums.MemberState;
 import com.ruoyi.common.enums.MemberType;
@@ -17,14 +16,14 @@ import java.util.List;
 
 /**
  * <p>
- * 通用活动通知：巅峰对决/组织争霸....
+ * 天地战场活动 - 今日提示
  * </p>
  *
  * @author red-velvet
- * @since 2024/6/21
+ * @since 2024/6/20
  */
-@Component("commonTask")
-public class CommonTask extends AbstractEmailTask implements ActivityNotify {
+@Component("worldTask")
+public class WorldTask extends AbstractEmailTask implements ActivityNotify {
 
     @Autowired
     private IMemberService memberService;
@@ -34,6 +33,7 @@ public class CommonTask extends AbstractEmailTask implements ActivityNotify {
         // 提取所有成员的 qq 字段
         Member member = new Member();
         member.setState(MemberState.IN_ORGANIZATION.getCode());
+        member.setType(MemberType.MEMBER.getCode());
         List<Member> memberList = memberService.selectMemberList(member);
 
         //获取邮件标题
@@ -56,6 +56,7 @@ public class CommonTask extends AbstractEmailTask implements ActivityNotify {
         Member member = new Member();
         member.setState(MemberState.IN_ORGANIZATION.getCode());
         member.setType(MemberType.MEMBER.getCode());
+
         List<Member> memberList = memberService.selectMemberList(member);
 
         // 计算当前时间距离活动时间的分钟差
@@ -75,4 +76,3 @@ public class CommonTask extends AbstractEmailTask implements ActivityNotify {
         startScheduledTask();
     }
 }
-

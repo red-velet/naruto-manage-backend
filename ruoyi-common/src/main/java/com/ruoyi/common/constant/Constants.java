@@ -193,4 +193,10 @@ public class Constants {
      */
     public static final String QQ_TAIL = "@qq.com";
 
+
+    /**
+     * 组织名
+     */
+    public static final String CLUB_NAME = "一花一世界";
+
 }
