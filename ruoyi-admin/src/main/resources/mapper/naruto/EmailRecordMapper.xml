@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.EmailRecordMapper">
+    <resultMap type="com.ruoyi.system.domain.EmailRecord" id="EmailRecordResult">
+        <result property="id" column="id"/>
+        <result property="fromMember" column="from_member"/>
+        <result property="toMember" column="to_member"/>
+        <result property="subject" column="subject"/>
+        <result property="state" column="state"/>
+        <result property="sendTime" column="send_time"/>
+        <result property="reason" column="reason"/>
+    </resultMap>
+
+    <sql id="selectEmailRecordVo">
+        select id, from_member, to_member, subject, state, send_time, reason
+        from nar_email_record
+    </sql>
+
+    <select id="selectEmailRecordList" parameterType="com.ruoyi.system.domain.EmailRecord"
+            resultMap="EmailRecordResult">
+        <include refid="selectEmailRecordVo"/>
+        <where>
+            <if test="fromMember != null  and fromMember != ''">
+                and from_member = #{fromMember}
+            </if>
+            <if test="toMember != null  and toMember != ''">
+                and to_member = #{toMember}
+            </if>
+            <if test="subject != null  and subject != ''">
+                and subject = #{subject}
+            </if>
+            <if test="state != null ">
+                and state = #{state}
+            </if>
+            <if test="sendTime != null ">
+                and send_time = #{sendTime}
+            </if>
+            <if test="reason != null  and reason != ''">
+                and reason = #{reason}
+            </if>
+        </where>
+        ORDER BY send_time DESC
+    </select>
+
+    <select id="selectEmailRecordById" parameterType="Integer" resultMap="EmailRecordResult">
+        <include refid="selectEmailRecordVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertEmailRecord" parameterType="com.ruoyi.system.domain.EmailRecord" useGeneratedKeys="true"
+            keyProperty="id">
+        insert into nar_email_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="fromMember != null">
+                from_member,
+            </if>
+            <if test="toMember != null">
+                to_member,
+            </if>
+            <if test="subject != null">
+                subject,
+            </if>
+            <if test="state != null">
+                state,
+            </if>
+            <if test="sendTime != null">
+                send_time,
+            </if>
+            <if test="reason != null">
+                reason,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="fromMember != null">
+                #{fromMember},
+            </if>
+            <if test="toMember != null">
+                #{toMember},
+            </if>
+            <if test="subject != null">
+                #{subject},
+            </if>
+            <if test="state != null">
+                #{state},
+            </if>
+            <if test="sendTime != null">
+                #{sendTime},
+            </if>
+            <if test="reason != null">
+                #{reason},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateEmailRecord" parameterType="com.ruoyi.system.domain.EmailRecord">
+        update nar_email_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="fromMember != null">
+                from_member = #{fromMember},
+            </if>
+            <if test="toMember != null">
+                to_member = #{toMember},
+            </if>
+            <if test="subject != null">
+                subject = #{subject},
+            </if>
+            <if test="state != null">
+                state = #{state},
+            </if>
+            <if test="sendTime != null">
+                send_time = #{sendTime},
+            </if>
+            <if test="reason != null">
+                reason = #{reason},
+            </if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteEmailRecordById" parameterType="Integer">
+        delete
+        from nar_email_record
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteEmailRecordByIds" parameterType="String">
+        delete from nar_email_record where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

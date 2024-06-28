@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.MemberMapper">
+    <resultMap type="Member" id="MemberResult">
+        <result property="id" column="id"/>
+        <result property="nId" column="n_id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="type" column="type"/>
+        <result property="state" column="state"/>
+        <result property="power" column="power"/>
+        <result property="qq" column="qq"/>
+        <result property="joinTime" column="join_time"/>
+        <result property="createdTime" column="created_time"/>
+        <result property="updatedTime" column="updated_time"/>
+    </resultMap>
+
+    <sql id="selectMemberVo">
+        select id,
+               n_id,
+               nickname,
+               type,
+               state,
+               power,
+               qq,
+               join_time,
+               created_time,
+               updated_time
+        from nar_member
+    </sql>
+
+    <select id="selectMemberList" parameterType="Member" resultMap="MemberResult">
+        <include refid="selectMemberVo"/>
+        <where>
+            <if test="nId != null  and nId != ''">
+                and n_id = #{nId}
+            </if>
+            <if test="nickname != null  and nickname != ''">
+                and nickname like concat('%', #{nickname}, '%')
+            </if>
+            <if test="type != null ">
+                and type = #{type}
+            </if>
+            <if test="state != null ">
+                and state = #{state}
+            </if>
+            <if test="power != null  and power != ''">
+                and power &gt;= #{power}
+            </if>
+            <if test="qq != null  and qq != ''">
+                and qq = #{qq}
+            </if>
+            <if test="params.beginJoinTime != null and params.beginJoinTime != '' and params.endJoinTime != null and params.endJoinTime != ''">
+                and join_time between #{params.beginJoinTime} and #{params.endJoinTime}
+            </if>
+            <if test="params.beginCreatedTime != null and params.beginCreatedTime != '' and params.endCreatedTime != null and params.endCreatedTime != ''">
+                and created_time between #{params.beginCreatedTime} and #{params.endCreatedTime}
+            </if>
+            <if test="params.beginUpdatedTime != null and params.beginUpdatedTime != '' and params.endUpdatedTime != null and params.endUpdatedTime != ''">
+                and updated_time between #{params.beginUpdatedTime} and #{params.endUpdatedTime}
+            </if>
+        </where>
+        ORDER BY power DESC
+    </select>
+
+    <select id="selectMemberById" parameterType="Long" resultMap="MemberResult">
+        <include refid="selectMemberVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectMemberByNId" parameterType="Long" resultMap="MemberResult">
+        <include refid="selectMemberVo"/>
+        where n_id = #{nId}
+    </select>
+
+    <insert id="insertMember" parameterType="Member">
+        insert into nar_member
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="nId != null">
+                n_id,
+            </if>
+            <if test="nickname != null">
+                nickname,
+            </if>
+            <if test="type != null">
+                type,
+            </if>
+            <if test="state != null">
+                state,
+            </if>
+            <if test="power != null">
+                power,
+            </if>
+            <if test="qq != null">
+                qq,
+            </if>
+            <if test="joinTime != null">
+                join_time,
+            </if>
+            <if test="createdTime != null">
+                created_time,
+            </if>
+            <if test="updatedTime != null">
+                updated_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id},
+            </if>
+            <if test="nId != null">
+                #{nId},
+            </if>
+            <if test="nickname != null">
+                #{nickname},
+            </if>
+            <if test="type != null">
+                #{type},
+            </if>
+            <if test="state != null">
+                #{state},
+            </if>
+            <if test="power != null">
+                #{power},
+            </if>
+            <if test="qq != null">
+                #{qq},
+            </if>
+            <if test="joinTime != null">
+                #{joinTime},
+            </if>
+            <if test="createdTime != null">
+                #{createdTime},
+            </if>
+            <if test="updatedTime != null">
+                #{updatedTime},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateMember" parameterType="Member">
+        update nar_member
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="nId != null">
+                n_id = #{nId},
+            </if>
+            <if test="nickname != null">
+                nickname = #{nickname},
+            </if>
+            <if test="type != null">
+                type = #{type},
+            </if>
+            <if test="state != null">
+                state = #{state},
+            </if>
+            <if test="power != null">
+                power = #{power},
+            </if>
+            <if test="qq != null">
+                qq = #{qq},
+            </if>
+            <if test="joinTime != null">
+                join_time = #{joinTime},
+            </if>
+            <if test="createdTime != null">
+                created_time = #{createdTime},
+            </if>
+            updated_time = #{updatedTime},
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteMemberById" parameterType="Long">
+        delete
+        from nar_member
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteMemberByIds" parameterType="String">
+        delete from nar_member where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="countUsersByPowerRange" resultType="int">
+        SELECT COUNT(1)
+        FROM nar_member
+        WHERE power BETWEEN #{start} AND #{end}
+    </select>
+
+    <select id="findMaxPower" resultType="int">
+        SELECT max(power)
+        from nar_member
+        where type = 0
+    </select>
+
+    <select id="findMinPower" resultType="int">
+        SELECT min(power)
+        from nar_member
+        where type = 0
+    </select>
+</mapper>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.FortressMapper">
+    <resultMap type="com.ruoyi.system.domain.Fortress" id="FortressResult">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type"/>
+    </resultMap>
+
+    <sql id="selectFortressVo">
+        select id, name, type
+        from nar_fortress
+    </sql>
+
+    <select id="selectFortressList" parameterType="com.ruoyi.system.domain.Fortress" resultMap="FortressResult">
+        <include refid="selectFortressVo"/>
+        <where>
+            <if test="name != null  and name != ''">
+                and name like concat('%', #{name}, '%')
+            </if>
+            <if test="type != null ">
+                and type = #{type}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectFortressById" parameterType="Long" resultMap="FortressResult">
+        <include refid="selectFortressVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFortress" parameterType="com.ruoyi.system.domain.Fortress" useGeneratedKeys="true"
+            keyProperty="id">
+        insert into nar_fortress
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">
+                name,
+            </if>
+            <if test="type != null">
+                type,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">
+                #{name},
+            </if>
+            <if test="type != null">
+                #{type},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateFortress" parameterType="com.ruoyi.system.domain.Fortress">
+        update nar_fortress
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="type != null">
+                type = #{type},
+            </if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFortressById" parameterType="Long">
+        delete
+        from nar_fortress
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteFortressByIds" parameterType="String">
+        delete from nar_fortress where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

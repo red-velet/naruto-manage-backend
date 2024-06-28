@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.FortressAchievementMapper">
+    <resultMap type="com.ruoyi.system.domain.FortressAchievement" id="FortressAchievementResult">
+        <result property="id" column="id"/>
+        <result property="activityTime" column="activity_time"/>
+        <result property="fortressId" column="fortress_id"/>
+        <result property="rank" column="rank"/>
+        <result property="first" column="first"/>
+        <result property="second" column="second"/>
+    </resultMap>
+
+    <sql id="selectFortressAchievementVo">
+        select id, activity_time, fortress_id, rank, first, second
+        from nar_fortress_achievement
+    </sql>
+
+    <select id="selectFortressAchievementList" parameterType="com.ruoyi.system.domain.FortressAchievement"
+            resultMap="FortressAchievementResult">
+        <include refid="selectFortressAchievementVo"/>
+        <where>
+            <if test="activityTime != null ">
+                and activity_time = #{activityTime}
+            </if>
+            <if test="fortressId != null ">
+                and fortress_id = #{fortressId}
+            </if>
+            <if test="rank != null ">
+                and rank = #{rank}
+            </if>
+            <if test="first != null  and first != ''">
+                and first = #{first}
+            </if>
+            <if test="second != null  and second != ''">
+                and second = #{second}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectFortressAchievementById" parameterType="Integer" resultMap="FortressAchievementResult">
+        <include refid="selectFortressAchievementVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertFortressAchievement" parameterType="com.ruoyi.system.domain.FortressAchievement"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into nar_fortress_achievement
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="activityTime != null">
+                activity_time,
+            </if>
+            <if test="fortressId != null">
+                fortress_id,
+            </if>
+            <if test="rank != null">
+                rank,
+            </if>
+            <if test="first != null">
+                first,
+            </if>
+            <if test="second != null">
+                second,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="activityTime != null">
+                #{activityTime},
+            </if>
+            <if test="fortressId != null">
+                #{fortressId},
+            </if>
+            <if test="rank != null">
+                #{rank},
+            </if>
+            <if test="first != null">
+                #{first},
+            </if>
+            <if test="second != null">
+                #{second},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateFortressAchievement" parameterType="com.ruoyi.system.domain.FortressAchievement">
+        update nar_fortress_achievement
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="activityTime != null">
+                activity_time = #{activityTime},
+            </if>
+            <if test="fortressId != null">
+                fortress_id = #{fortressId},
+            </if>
+            <if test="rank != null">
+                rank = #{rank},
+            </if>
+            <if test="first != null">
+                first = #{first},
+            </if>
+            <if test="second != null">
+                second = #{second},
+            </if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteFortressAchievementById" parameterType="Integer">
+        delete
+        from nar_fortress_achievement
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteFortressAchievementByIds" parameterType="String">
+        delete from nar_fortress_achievement where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
