@@ -41,6 +41,15 @@ public class MemberController extends BaseController {
         return getDataTable(list);
     }
 
+    @PreAuthorize("@ss.hasPermi('naruto:member:list')")
+    @GetMapping("/listAll")
+    public AjaxResult listAll() {
+        List<Member> list = memberService.selectMemberListAll();
+        AjaxResult ajaxResult = AjaxResult.success();
+        ajaxResult.put("data", list);
+        return ajaxResult;
+    }
+
     @Log(title = "用户管理", businessType = BusinessType.IMPORT)
     @PreAuthorize("@ss.hasPermi('naruto:member:import')")
     @PostMapping("/import")

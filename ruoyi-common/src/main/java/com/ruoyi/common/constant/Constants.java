@@ -199,4 +199,16 @@ public class Constants {
      */
     public static final String CLUB_NAME = "一花一世界";
 
+
+    /**
+     * 默认密码
+     */
+    public static final String DEFAULT_PWD = "yhysj521";
+
+
+    /**
+     * 组织成员角色
+     */
+    public static final Integer ROLE_MEMBER = 112;
+
 }

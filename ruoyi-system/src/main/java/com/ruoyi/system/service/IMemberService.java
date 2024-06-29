@@ -74,4 +74,7 @@ public interface IMemberService {
     List<String> getBetweenPower();
 
     List<Integer> getBetweenPowerCount(List<String> between);
+
+    List<Member> selectMemberListAll();
+
 }

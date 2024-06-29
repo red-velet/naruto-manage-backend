@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.AccessoryMapper">
+    <resultMap type="com.ruoyi.system.domain.Accessory" id="AccessoryResult">
+        <result property="id" column="id"/>
+        <result property="type" column="type"/>
+        <result property="mId" column="m_id"/>
+        <result property="startTime" column="start_time"/>
+    </resultMap>
+
+
+    <sql id="selectAccessoryVo">
+        select id, type, m_id, start_time
+        from nar_accessory
+    </sql>
+
+
+    <select id="selectAccessoryList" parameterType="com.ruoyi.system.domain.Accessory" resultMap="AccessoryResult">
+        <include refid="selectAccessoryVo"/>
+        <where>
+            <if test="type != null ">
+                and type = #{type}
+            </if>
+            <if test="mId != null ">
+                and m_id = #{mId}
+            </if>
+            <if test="startTime != null ">
+                and start_time = #{startTime}
+            </if>
+        </where>
+    </select>
+
+    <sql id="getAccessoryVo">
+        select a.id         as id,
+               a.type       as type,
+               a.m_id       as mId,
+               m.nickname   as nickname,
+               a.start_time as startTime
+        from nar_accessory a
+                 left join
+             nar_member m
+             on
+                 a.m_id = m.id
+    </sql>
+
+    <select id="getList" parameterType="com.ruoyi.system.domain.vo.AccessoryVo"
+            resultType="com.ruoyi.system.domain.vo.AccessoryVo">
+        <include refid="getAccessoryVo"/>
+        <where>
+            <if test="type != null">
+                and a.type = #{type}
+            </if>
+            <if test="mId != null">
+                and a.m_id = #{mId}
+            </if>
+            <if test="nickname != null and nickname != ''">
+                and m.nickname like concat('%', #{nickname}, '%')
+            </if>
+            <if test="startTime != null">
+                and a.start_time = #{startTime}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectAccessoryById" parameterType="Integer" resultMap="AccessoryResult">
+        <include refid="selectAccessoryVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertAccessory" parameterType="com.ruoyi.system.domain.Accessory" useGeneratedKeys="true"
+            keyProperty="id">
+        insert into nar_accessory
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="type != null">
+                type,
+            </if>
+            <if test="mId != null">
+                m_id,
+            </if>
+            <if test="startTime != null">
+                start_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="type != null">
+                #{type},
+            </if>
+            <if test="mId != null">
+                #{mId},
+            </if>
+            <if test="startTime != null">
+                #{startTime},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="updateAccessory" parameterType="com.ruoyi.system.domain.Accessory">
+        update nar_accessory
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="type != null">
+                type = #{type},
+            </if>
+            <if test="mId != null">
+                m_id = #{mId},
+            </if>
+            <if test="startTime != null">
+                start_time = #{startTime},
+            </if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAccessoryById" parameterType="Integer">
+        delete
+        from nar_accessory
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteAccessoryByIds" parameterType="String">
+        delete from nar_accessory where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

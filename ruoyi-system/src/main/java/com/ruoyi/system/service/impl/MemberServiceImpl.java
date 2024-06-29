@@ -1,5 +1,8 @@
 package com.ruoyi.system.service.impl;
 
+import com.ruoyi.common.constant.Constants;
+import com.ruoyi.common.core.domain.entity.SysUser;
+import com.ruoyi.common.enums.MemberState;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanValidators;
@@ -7,6 +10,8 @@ import com.ruoyi.system.domain.Member;
 import com.ruoyi.system.domain.MemberExport;
 import com.ruoyi.system.domain.vo.PowerBetweenVo;
 import com.ruoyi.system.mapper.MemberMapper;
+import com.ruoyi.system.mapper.SysUserMapper;
+import com.ruoyi.system.mapper.SysUserRoleMapper;
 import com.ruoyi.system.service.IMemberService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +33,12 @@ import java.util.List;
 public class MemberServiceImpl implements IMemberService {
     @Autowired
     private MemberMapper memberMapper;
+
+    @Autowired
+    private SysUserMapper userMapper;
+
+    @Autowired
+    private SysUserRoleMapper userRoleMapper;
 
     /**
      * 查询成员信息
@@ -64,7 +75,23 @@ public class MemberServiceImpl implements IMemberService {
         if (mb != null) {
             return -1;
         }
-        return memberMapper.insertMember(member);
+        int res = memberMapper.insertMember(member);
+        //为用户注册系统登录账号
+        assignedAccount(member);
+        return res;
+    }
+
+    public void assignedAccount(Member member) {
+        //添加用户信息
+        SysUser user = new SysUser();
+        user.setNickName(member.getNickname());
+        user.setUserName(member.getnId());
+        user.setPassword(Constants.DEFAULT_PWD);
+        user.setEmail(member.getQq() + "@qq.com");
+        userMapper.insertUser(user);
+
+        //为用户分配角色
+        userRoleMapper.insertUserRole(user.getUserId(), Constants.ROLE_MEMBER);
     }
 
     /**
@@ -271,6 +298,13 @@ public class MemberServiceImpl implements IMemberService {
         }
 
         return counts;
+    }
+
+    @Override
+    public List<Member> selectMemberListAll() {
+        Member member = new Member();
+        member.setState(MemberState.IN_ORGANIZATION.getCode());
+        return memberMapper.selectMemberList(member);
     }
 
     private List<String> generateIntervals() {
