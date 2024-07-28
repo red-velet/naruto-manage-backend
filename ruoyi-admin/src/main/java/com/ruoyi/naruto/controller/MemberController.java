@@ -38,6 +38,8 @@ public class MemberController extends BaseController {
     public TableDataInfo list(Member member) {
         startPage();
         List<Member> list = memberService.selectMemberList(member);
+        //暂时性的添加用户
+        //memberService.tmpMethod();
         return getDataTable(list);
     }
 

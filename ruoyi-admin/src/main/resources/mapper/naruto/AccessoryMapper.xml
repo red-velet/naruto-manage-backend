@@ -62,6 +62,7 @@
                 and a.start_time = #{startTime}
             </if>
         </where>
+        ORDER BY start_time DESC
     </select>
 
     <select id="selectAccessoryById" parameterType="Integer" resultMap="AccessoryResult">

@@ -4,6 +4,7 @@ import com.ruoyi.common.constant.Constants;
 import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.enums.MemberState;
 import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanValidators;
 import com.ruoyi.system.domain.Member;
@@ -22,6 +23,7 @@ import javax.validation.Validator;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 成员信息Service业务层处理
@@ -86,12 +88,27 @@ public class MemberServiceImpl implements IMemberService {
         SysUser user = new SysUser();
         user.setNickName(member.getNickname());
         user.setUserName(member.getnId());
-        user.setPassword(Constants.DEFAULT_PWD);
+        user.setPassword(SecurityUtils.encryptPassword(Constants.DEFAULT_PWD));
         user.setEmail(member.getQq() + "@qq.com");
         userMapper.insertUser(user);
 
         //为用户分配角色
         userRoleMapper.insertUserRole(user.getUserId(), Constants.ROLE_MEMBER);
+    }
+
+    @Override
+    public void tmpMethod() {
+        //获取所有在组织的成员/学员
+        Member m = new Member();
+        m.setState(MemberState.IN_ORGANIZATION.getCode());
+        List<Member> members = memberMapper.selectMemberList(m);
+        //如果成员已注册，则跳过
+        for (Member member : members) {
+            SysUser sysUser = userMapper.selectUserById(Long.parseLong(member.getnId()));
+            if (Objects.isNull(sysUser)) {
+                assignedAccount(member);
+            }
+        }
     }
 
     /**
@@ -306,6 +323,7 @@ public class MemberServiceImpl implements IMemberService {
         member.setState(MemberState.IN_ORGANIZATION.getCode());
         return memberMapper.selectMemberList(member);
     }
+
 
     private List<String> generateIntervals() {
         // 向下取整最小战力值到最接近的50或100的倍数

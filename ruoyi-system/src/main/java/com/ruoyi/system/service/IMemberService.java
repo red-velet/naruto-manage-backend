@@ -77,4 +77,6 @@ public interface IMemberService {
 
     List<Member> selectMemberListAll();
 
+    void tmpMethod();
+
 }

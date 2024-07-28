@@ -191,17 +191,21 @@
         SELECT COUNT(1)
         FROM nar_member
         WHERE power BETWEEN #{start} AND #{end}
+          AND type = 0
+          AND state = 0
     </select>
 
     <select id="findMaxPower" resultType="int">
         SELECT max(power)
         from nar_member
         where type = 0
+          AND state = 0
     </select>
 
     <select id="findMinPower" resultType="int">
         SELECT min(power)
         from nar_member
         where type = 0
+          AND state = 0
     </select>
 </mapper>
