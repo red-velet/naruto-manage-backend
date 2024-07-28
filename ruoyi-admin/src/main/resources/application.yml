@@ -51,7 +51,7 @@ spring:
     host: smtp.qq.com
     port: 465
     username: redvelet@qq.com #username: redvelet@qq.com
-    password: jypyvelrgxbobfhc # password: lrwdewvgluzmbehb
+    password: aaaaaaaaaaaaa # password: lrwdewvgluzmbehb
     protocol: smtps
     properties:
       mail:
@@ -84,15 +84,13 @@ spring:
   # redis 配置
   redis:
     # 地址
-    #    host: 127.0.0.1
-    host: 47.115.211.22
+    host: 127.0.0.1
     # 端口，默认为6379
     port: 6379
     # 数据库索引
     database: 0
     # 密码
-    #    password: Zz172425..
-    password: Zz172425..
+    password:
     # 连接超时时间
     timeout: 10s
     lettuce:
